@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMNIA Connect – Supplier Template Management</title>
+<!-- Proxima Nova is licensed and served by OMNIA Connect's CDN; Nunito Sans is the closest open-source match -->
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── OMNIA Connect design tokens (captured from live site) ── */
+/* Navy #222742 · Blue #007cbd · Font: proxima-nova / Nunito Sans fallback */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: proxima-nova, 'Nunito Sans', 'Proxima Nova', Arial, sans-serif; font-size: 14px; background: #f8f8f8; color: #181d1f; }
+
+/* ── TOP NAV ─────────────────────────── */
+.topnav { background:#222742; height:56px; display:flex; align-items:center; padding:0 24px; gap:24px; position:sticky; top:0; z-index:100; }
+.logo { display:flex; align-items:center; gap:8px; color:#fff; font-size:14px; font-weight:700; letter-spacing:.3px; white-space:nowrap; }
+.logo-circle { width:24px; height:24px; border:2px solid #fff; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+.logo-circle::after { content:''; width:8px; height:8px; background:#fff; border-radius:50%; }
+.topnav nav { display:flex; gap:4px; }
+.topnav nav a { color:rgba(255,255,255,.85); text-decoration:none; font-size:13px; padding:6px 10px; border-radius:2px; }
+.topnav nav a:hover { color:#fff; background:rgba(255,255,255,.1); }
+.nav-right { margin-left:auto; display:flex; align-items:center; gap:16px; color:rgba(255,255,255,.85); font-size:13px; }
+
+/* ── PAGE ─────────────────────────────── */
+.page { max-width:1200px; margin:0 auto; padding:24px 32px 60px; }
+h1.page-title { font-size:24px; font-weight:700; color:#222742; margin-bottom:20px; }
+
+/* ── TABS (underline style — matches live OMNIA Connect) ─── */
+.tab-cards { display:flex; gap:0; margin-bottom:24px; border-bottom:2px solid #d0d5dd; }
+.tab-card { padding:10px 20px; text-align:center; border:none; border-bottom:2px solid transparent; margin-bottom:-2px; background:transparent; cursor:pointer; font-size:14px; font-weight:500; color:#6e6e73; font-family:inherit; }
+.tab-card:hover { color:#222742; }
+.tab-card.active { color:#007cbd; border-bottom-color:#007cbd; }
+
+/* ── FILTER ROW ───────────────────────── */
+.filter-row { background:#fff; border:1px solid #dde2eb; padding:18px 20px 14px; margin-bottom:16px; display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; }
+.fg { display:flex; flex-direction:column; gap:5px; }
+.fg.grow { flex:1; min-width:160px; }
+.fg.sm   { min-width:130px; }
+.fg.xs   { min-width:110px; }
+
+/* ── BUTTONS ──────────────────────────── */
+.btn-primary { background:#007cbd; color:#fff; border:none; border-radius:2px; padding:8px 20px; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:inherit; letter-spacing:.2px; }
+.btn-primary:hover { background:#006aaa; }
+.btn-ghost { background:#fff; color:#007cbd; border:0.8px solid #007cbd; border-radius:2px; padding:8px 16px; font-size:13px; font-weight:500; cursor:pointer; font-family:inherit; }
+.btn-ghost:hover { background:#e8f4fb; }
+.btn-save { background:#007cbd; color:#fff; border:none; padding:9px 22px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; border-radius:2px; }
+.btn-save:hover { background:#006aaa; }
+.btn-save:disabled { background:#c8cdd6; cursor:not-allowed; }
+.btn-cancel { background:#fff; border:0.8px solid #c8cdd6; color:#555; padding:9px 16px; font-size:13px; cursor:pointer; font-family:inherit; border-radius:2px; }
+.btn-cancel:hover { background:#f0f0f0; }
+.btn-text-danger { background:none; border:none; color:#c62828; font-size:12.5px; cursor:pointer; font-family:inherit; padding:4px 0; display:inline-flex; align-items:center; gap:4px; }
+.btn-text-danger:hover { text-decoration:underline; }
+.btn-outline-sm { background:#fff; color:#555; border:0.8px solid #c8cdd6; border-radius:2px; padding:5px 10px; font-size:12px; cursor:pointer; font-family:inherit; white-space:nowrap; }
+.btn-outline-sm:hover { border-color:#007cbd; color:#007cbd; }
+.btn-outline-sm.danger:hover { border-color:#c62828; color:#c62828; }
+.btn-outline-sm.active-row { border-color:#007cbd; color:#007cbd; background:#e8f4fb; }
+.btn-export { background:#fff; color:#555; border:0.8px solid #c8cdd6; border-radius:2px; padding:6px 12px; font-size:12px; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:5px; }
+.btn-export:hover { border-color:#007cbd; color:#007cbd; }
+
+/* ── TABLE ────────────────────────────── */
+.tbl-wrap { background:#fff; border:1px solid #dde2eb; }
+table { width:100%; border-collapse:collapse; }
+thead tr { background:#222742; }
+thead th { color:#fff; font-size:13px; font-weight:500; padding:12px 14px; text-align:left; white-space:nowrap; letter-spacing:.2px; border-right:1px solid rgba(255,255,255,.08); }
+thead th:last-child { border-right:none; }
+tbody tr { border-bottom:0.8px solid #dde2eb; }
+tbody tr:nth-child(odd):not(.row-expanded) { background:#fcfcfc; }
+tbody tr:nth-child(even):not(.row-expanded) { background:#fff; }
+tbody tr:hover:not(.row-expanded) { background:#e8f4fb; }
+tbody tr.row-expanded { background:#eef2ff !important; border-bottom:none; }
+tbody td { padding:11px 14px; font-size:14px; color:#181d1f; vertical-align:middle; }
+input[type="checkbox"] { accent-color:#007cbd; width:15px; height:15px; cursor:pointer; }
+.tbl-actions { display:flex; gap:4px; align-items:center; }
+
+/* ── INLINE EXPANSION ─────────────────── */
+.expand-row td { padding:0 !important; background:#f4f6ff !important; border-bottom:2px solid #222742 !important; }
+.expand-content { padding:24px; border-top:3px solid #222742; }
+.expand-meta { display:grid; grid-template-columns:2fr 1fr 1fr auto auto; gap:16px; align-items:flex-end; margin-bottom:20px; }
+
+/* ── CHIPS ────────────────────────────── */
+.chip { display:inline-block; border-radius:20px; padding:2px 9px; font-size:11px; font-weight:600; letter-spacing:.1px; }
+.chip-strategic  { background:#e3f2fd; color:#1565c0; }
+.chip-emerging   { background:#f3e5f5; color:#7b1fa2; }
+.chip-self       { background:#e8f5e9; color:#2e7d32; }
+.chip-onboarding { background:#fff8e1; color:#b45309; }
+.chip-active     { background:#e6f4ea; color:#1e7e34; }
+.chip-inactive   { background:#eaeaea; color:#555; }
+.chip-default    { background:#fff3e0; color:#e65100; font-size:10px; margin-left:5px; }
+.chip-warn       { background:#fff8e1; color:#b45309; font-size:10px; }
+
+/* ── MODAL ────────────────────────────── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:300; }
+.modal-overlay.open { display:block; }
+.modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:700px; max-height:88vh; background:#fff; z-index:301; border-radius:2px; box-shadow:0 8px 32px rgba(0,0,0,.22); flex-direction:column; }
+.modal.open { display:flex; }
+.modal-header { padding:16px 20px; border-bottom:1px solid #dde2eb; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.modal-header h2 { font-size:16px; font-weight:700; color:#222742; }
+.modal-body { flex:1; overflow-y:auto; padding:20px; }
+.modal-footer { padding:12px 20px; border-top:1px solid #dde2eb; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.modal-close { background:none; border:none; font-size:18px; color:#6e6e73; cursor:pointer; padding:2px 6px; line-height:1; }
+.modal-close:hover { color:#222742; }
+
+/* ── INPUTS ───────────────────────────── */
+.form-group { margin-bottom:16px; }
+.form-label { font-size:11px; color:#6e6e73; font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px; display:block; }
+input[type="text"].mat-input, select.mat-input { width:100%; border:none; border-bottom:1px solid #c8cdd6; padding:7px 0; font-size:14px; color:#181d1f; background:transparent; outline:none; font-family:inherit; transition:border-color .15s; }
+input[type="text"].mat-input:focus, select.mat-input:focus { border-bottom:2px solid #007cbd; }
+select.mat-input { border-radius:0; appearance:auto; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:16px; }
+.form-row.cols3 { grid-template-columns:1fr 1fr 1fr; }
+
+/* ── TOGGLE ───────────────────────────── */
+.toggle-pill { display:flex; align-items:center; gap:8px; }
+.toggle-pill-track { width:40px; height:22px; background:#c8cdd6; border-radius:11px; position:relative; cursor:pointer; transition:background .2s; flex-shrink:0; }
+.toggle-pill-track.on { background:#007cbd; }
+.toggle-pill-track::after { content:''; width:18px; height:18px; background:#fff; border-radius:50%; position:absolute; top:2px; left:2px; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.3); }
+.toggle-pill-track.on::after { left:20px; }
+.toggle-pill-label { font-size:13px; color:#181d1f; font-weight:500; }
+
+.divider { border:none; border-top:1px solid #dde2eb; margin:16px 0; }
+
+/* ── ROLE TABS ────────────────────────── */
+.role-tab-row { display:flex; gap:0; margin-bottom:16px; border-bottom:1.5px solid #d0d5dd; }
+.role-tab { padding:8px 16px; font-size:13px; font-weight:500; color:#6e6e73; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1.5px; font-family:inherit; }
+.role-tab:hover { color:#222742; }
+.role-tab.active { color:#007cbd; border-bottom-color:#007cbd; font-weight:600; }
+
+/* ── CHECKBOX PANEL ───────────────────── */
+.chk-panel { border:1px solid #dde2eb; border-radius:2px; }
+.chk-panel-header { padding:9px 14px; border-bottom:1px solid #dde2eb; display:flex; align-items:center; gap:8px; background:#f0f2f8; }
+.chk-panel-header .hdr-label { font-size:12px; font-weight:700; color:#222742; text-transform:uppercase; letter-spacing:.4px; }
+.chk-panel-header .hdr-count { font-size:12px; color:#007cbd; margin-left:auto; font-weight:600; }
+.chk-panel-header .hdr-help { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:#dde2eb; border-radius:50%; font-size:10px; color:#555; cursor:help; }
+.chk-panel-body { max-height:200px; overflow-y:auto; }
+.chk-item { display:flex; align-items:center; gap:10px; padding:7px 14px; border-bottom:0.8px solid #f0f0f0; cursor:pointer; }
+.chk-item:last-child { border-bottom:none; }
+.chk-item:hover { background:#f5f7ff; }
+.chk-item label { font-size:13px; color:#181d1f; cursor:pointer; flex:1; }
+.chk-panels-2col { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+/* ── NOTICES ──────────────────────────── */
+.notice { padding:10px 14px; font-size:12.5px; border-radius:0 2px 2px 0; margin-bottom:14px; }
+.notice-warn  { background:#fff3e0; border-left:3px solid #f59e0b; color:#78350f; }
+.notice-info  { background:#e8f4fb; border-left:3px solid #007cbd; color:#1a3a5c; }
+.notice-amber { background:#fff8e1; border-left:3px solid #ffc107; color:#78350f; }
+
+/* ── ASSIGN SUB-TABS ──────────────────── */
+.assign-tabs { display:flex; gap:0; margin-bottom:16px; }
+.assign-tab { padding:8px 18px; font-size:13px; font-weight:500; border:0.8px solid #dde2eb; border-right:none; background:#fff; cursor:pointer; color:#6e6e73; font-family:inherit; }
+.assign-tab:first-child { border-radius:2px 0 0 2px; }
+.assign-tab:last-child  { border-right:0.8px solid #dde2eb; border-radius:0 2px 2px 0; }
+.assign-tab:hover { background:#f5f7ff; color:#222742; }
+.assign-tab.active { background:#e8f4fb; color:#007cbd; border-bottom:2px solid #007cbd; font-weight:600; }
+
+/* ── SECTOR DEFAULTS ──────────────────── */
+.sector-grp-row td { background:#f0f2f8 !important; padding:8px 14px !important; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#6e6e73; }
+.sector-none { color:#9e9e9e; font-style:italic; }
+
+/* ── AUDIT ────────────────────────────── */
+.audit-row { display:flex; gap:12px; padding:11px 0; border-bottom:0.8px solid #dde2eb; font-size:13px; }
+.audit-dot { width:8px; height:8px; border-radius:50%; background:#007cbd; margin-top:4px; flex-shrink:0; }
+.audit-meta { font-size:11px; color:#9e9e9e; margin-top:2px; }
+
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:#f8f8f8; }
+::-webkit-scrollbar-thumb { background:#c8cdd6; border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="topnav">
+  <div class="logo"><div class="logo-circle"></div>OMNIA | CONNECT</div>
+  <nav>
+    <a href="#">Home</a><a href="#">▾</a>
+    <a href="#">Partner Development</a>
+    <a href="#">Learning</a>
+    <a href="#">Public Prospecting</a>
+    <a href="#">Private Prospecting ▾</a>
+    <a href="#">Branding</a>
+    <a href="#">View: My View ▾</a>
+  </nav>
+  <div class="nav-right"><span>Valentina Diamante ▾</span><span>🔔</span></div>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+  <h1 class="page-title">Supplier Template Management</h1>
+
+  <!-- TABS -->
+  <div class="tab-cards">
+    <div class="tab-card active" onclick="switchTab('templates',this)">Templates</div>
+    <div class="tab-card" onclick="switchTab('sector',this)">Default Section Assignment</div>
+    <div class="tab-card" onclick="switchTab('assign',this)">Supplier Assignment</div>
+    <div class="tab-card" onclick="switchTab('audit',this)">Audit Trail</div>
+  </div>
+
+  <!-- ═ TEMPLATES ══════════════════════════════════════════════════ -->
+  <div id="pane-templates">
+    <div class="filter-row">
+      <div class="fg grow"><label class="form-label">Search</label><input type="text" class="mat-input" id="f-search" placeholder="Template name…" oninput="applyFilters()"></div>
+      <div class="fg sm"><label class="form-label">Tier</label><select class="mat-input" id="f-tier" onchange="applyFilters()"><option value="">All Tiers</option><option value="strategic">Strategic</option><option value="emerging">Emerging</option><option value="self">Self-Serve</option><option value="onboarding">Onboarding</option></select></div>
+      <div class="fg sm"><label class="form-label">Sector</label><select class="mat-input" id="f-sector" onchange="applyFilters()"><option value="">All Sectors</option><option value="Public">Public</option><option value="Private">Private</option><option value="Both">Both</option></select></div>
+      <div class="fg sm"><label class="form-label">Status</label><select class="mat-input" id="f-status" onchange="applyFilters()"><option value="">All</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+      <div class="fg sm"><label class="form-label">Assignment</label><select class="mat-input" id="f-assigned" onchange="applyFilters()"><option value="">All</option><option value="assigned">Assigned</option><option value="unassigned">Unassigned</option></select></div>
+      <div class="fg xs" style="padding-bottom:7px;"><label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;white-space:nowrap;"><input type="checkbox" id="f-default" onchange="applyFilters()" style="accent-color:#007cbd;"> Default only</label></div>
+      <div style="padding-bottom:2px;"><button class="btn-ghost" style="padding:5px 14px;font-size:12px;border-radius:2px;" onclick="clearFilters()">Clear</button></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <span id="tmpl-count-txt" style="font-size:13px;color:#6e6e73;font-weight:500;"></span>
+      <button class="btn-primary" onclick="openCreateModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Template
+      </button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Template Name</th><th>Tier</th><th>Sector</th><th>Status</th><th>Applied To</th>
+          <th style="width:220px;"></th>
+        </tr></thead>
+        <tbody id="tmpl-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═ DEFAULT SECTION ASSIGNMENT ════════════════════════════════ -->
+  <div id="pane-sector" style="display:none;">
+    <div style="background:#fff;border:1px solid #dde2eb;padding:20px;">
+      <h3 style="font-size:16px;font-weight:700;color:#222742;margin-bottom:4px;">Default Template per Tier &amp; Sector</h3>
+      <p style="font-size:13px;color:#6e6e73;margin-bottom:12px;">Applied automatically when a new supplier with a known tier is onboarded.</p>
+      <div class="notice notice-amber">⚠️ Onboarding tier structure is a pending business decision. Shown here as a placeholder.</div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="background:#222742;">
+          <th style="padding:11px 14px;font-size:13px;font-weight:500;text-align:left;color:#fff;width:120px;">Sector</th>
+          <th style="padding:11px 14px;font-size:13px;font-weight:500;text-align:left;color:#fff;">Default Template</th>
+          <th style="padding:11px 14px;font-size:13px;font-weight:500;text-align:center;color:#fff;width:100px;">Action</th>
+        </tr></thead>
+        <tbody id="sector-defaults-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═ SUPPLIER ASSIGNMENT ════════════════════════════════════════ -->
+  <div id="pane-assign" style="display:none;">
+    <div class="assign-tabs">
+      <button class="assign-tab active" id="at-bulk" onclick="setAssignView('bulk',this)">Bulk Assignment</button>
+      <button class="assign-tab" id="at-unassigned" onclick="setAssignView('unassigned',this)">
+        No Template Assigned &nbsp;<span class="chip chip-inactive" style="font-size:10px;padding:1px 6px;" id="unassigned-badge">12</span>
+      </button>
+    </div>
+    <!-- Bulk -->
+    <div id="av-bulk" style="background:#fff;border:1px solid #dde2eb;padding:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:#222742;">Bulk Template Assignment</h3>
+          <p style="font-size:13px;color:#6e6e73;margin-top:3px;">Assign or update a template for multiple suppliers at once.</p>
+        </div>
+        <button class="btn-export" onclick="exportFullAssignment()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Full Assignment Report
+        </button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:16px;">
+        <div class="form-group"><label class="form-label">Select Template</label><select class="mat-input" id="bulk-tmpl"><option value="">Choose template…</option></select></div>
+        <div class="form-group"><label class="form-label">Filter by Tier</label><select class="mat-input" id="bulk-tier" onchange="updateBulkCount()"><option value="all">All Tiers</option><option value="strategic">Strategic</option><option value="emerging">Emerging</option><option value="self">Self-Serve</option><option value="onboarding">Onboarding</option></select></div>
+        <div class="form-group"><label class="form-label">Filter by Sector</label><select class="mat-input" id="bulk-sector" onchange="updateBulkCount()"><option value="all">All Sectors</option><option value="Public">Public</option><option value="Private">Private</option><option value="Both">Both</option></select></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        <p style="font-size:12.5px;color:#555;" id="bulk-match-txt"><strong style="color:#222742;">247 suppliers</strong> match the filter. Applying will update permissions on next login.</p>
+        <button class="btn-export" onclick="exportFilteredSuppliers()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+      </div>
+      <button class="btn-save" onclick="openBulkConfirm()">Apply to Matched Suppliers</button>
+    </div>
+    <!-- Unassigned -->
+    <div id="av-unassigned" style="display:none;">
+      <div class="notice notice-warn">⚠️ <strong id="unassigned-warn-ct">12 suppliers</strong> have no template assigned — they cannot log in to OMNIA Connect.</div>
+      <p style="font-size:11px;color:#9e9e9e;margin-bottom:14px;">📌 This filter will also be available on individual supplier records (future epic).</p>
+      <div class="notice notice-info" style="display:none;" id="unassigned-bulk-bar">
+        <span id="unassigned-bulk-ct">0 selected</span> &nbsp;·&nbsp;
+        <select class="mat-input" id="unassigned-bulk-tmpl" style="width:220px;font-size:12px;display:inline-block;border-bottom:1px solid #90caf9;"><option value="">Select template…</option></select>
+        &nbsp;<button class="btn-primary" style="font-size:12px;padding:5px 14px;" onclick="bulkAssignUnassigned()">Assign Selected</button>
+      </div>
+      <div class="tbl-wrap" style="margin-top:10px;">
+        <table>
+          <thead><tr>
+            <th style="width:36px;"><input type="checkbox" id="chk-u-all" onchange="toggleAllUnassigned(this)" style="accent-color:#fff;"></th>
+            <th>Supplier Name</th><th>In System Since</th><th>Assign Template</th><th></th>
+          </tr></thead>
+          <tbody id="unassigned-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═ AUDIT ══════════════════════════════════════════════════════ -->
+  <div id="pane-audit" style="display:none;">
+    <div style="background:#fff;border:1px solid #dde2eb;padding:20px;">
+      <h3 style="font-size:16px;font-weight:700;color:#222742;margin-bottom:16px;">Template Change Audit Trail</h3>
+      <div id="audit-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL (shared: create, supplier picker, default picker, bulk confirm) -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal()"></div>
+<div class="modal" id="modal" onclick="event.stopPropagation()">
+  <div class="modal-header">
+    <h2 id="modal-title"></h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body" id="modal-body"></div>
+  <div class="modal-footer" id="modal-footer"></div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────
+const SUP_ROLES = [
+  { id:'sup_admin',    label:'Supplier Admin', desc:'Full control within supplier org' },
+  { id:'sup_user',     label:'Supplier User',  desc:'Standard supplier access' },
+  { id:'dealer_admin', label:'Dealer Admin',   desc:'Full control within dealer org' },
+  { id:'dealer_user',  label:'Dealer User',    desc:'Standard dealer access' },
+];
+
+const FEATURES = [
+  { grp:'Public Features',    id:'training',   label:'Training Access' },
+  { grp:'Public Features',    id:'marketing',  label:'Marketing Materials Access' },
+  { grp:'Public Features',    id:'users',      label:'Manage Users' },
+  { grp:'Public Features',    id:'bulletin',   label:'Bulletin Board' },
+  { grp:'Public Features',    id:'pin',        label:'Pin Search Results' },
+  { grp:'Public Features',    id:'export',     label:'Export Search Results' },
+  { grp:'Public Features',    id:'saved',      label:'Saved Searches' },
+  { grp:'Public Features',    id:'recently',   label:'Recently Viewed Organizations' },
+  { grp:'Private Features',   id:'market',     label:'Market Segment' },
+  { grp:'Private Features',   id:'engagement', label:'Engagement Score' },
+  { grp:'Private Features',   id:'contracts',  label:'Contracts Used LTM' },
+  { grp:'Private Features',   id:'ltm',        label:'LTM Supplier Sales & Trend' },
+  { grp:'Private Features',   id:'capital',    label:'Significant Capital Spent in Last 2 Years' },
+  { grp:'Private Features',   id:'prospect',   label:'Current or Prospect' },
+  { grp:'Private Features',   id:'opus',       label:'OPUS Access' },
+  { grp:'Private Features',   id:'pinned',     label:'Pinned' },
+  { grp:'Column Suppression', id:'pubcol',     label:'Public Column Suppression' },
+  { grp:'Column Suppression', id:'privcol',    label:'Private Column Suppression' },
+];
+
+const DEF_PERMS = {
+  sup_admin:    { training:true,  marketing:true,  users:true,  bulletin:true, pin:true,  export:true,  saved:true,  recently:true, market:true,  engagement:true,  contracts:true,  ltm:true,  capital:true,  prospect:true,  opus:true,  pinned:true,  pubcol:true,  privcol:true  },
+  sup_user:     { training:true,  marketing:true,  users:true,  bulletin:true, pin:true,  export:true,  saved:true,  recently:true, market:true,  engagement:true,  contracts:true,  ltm:false, capital:false, prospect:true,  opus:false, pinned:true,  pubcol:false, privcol:false },
+  dealer_admin: { training:true,  marketing:true,  users:true,  bulletin:true, pin:true,  export:true,  saved:true,  recently:true, market:false, engagement:false, contracts:false, ltm:false, capital:false, prospect:false, opus:false, pinned:true,  pubcol:false, privcol:false },
+  dealer_user:  { training:true,  marketing:true,  users:false, bulletin:true, pin:false, export:false, saved:false, recently:true, market:false, engagement:false, contracts:false, ltm:false, capital:false, prospect:false, opus:false, pinned:false, pubcol:false, privcol:false },
+};
+
+const ONBOARDING_PERMS = {
+  sup_admin:    { training:true, marketing:true,  users:true,  bulletin:true, pin:false, export:false, saved:true,  recently:true, market:false, engagement:false, contracts:false, ltm:false, capital:false, prospect:false, opus:false, pinned:false, pubcol:false, privcol:false },
+  sup_user:     { training:true, marketing:true,  users:false, bulletin:true, pin:false, export:false, saved:true,  recently:true, market:false, engagement:false, contracts:false, ltm:false, capital:false, prospect:false, opus:false, pinned:false, pubcol:false, privcol:false },
+  dealer_admin: { training:true, marketing:true,  users:false, bulletin:true, pin:false, export:false, saved:false, recently:true, market:false, engagement:false, contracts:false, ltm:false, capital:false, prospect:false, opus:false, pinned:false, pubcol:false, privcol:false },
+  dealer_user:  { training:true, marketing:false, users:false, bulletin:true, pin:false, export:false, saved:false, recently:true, market:false, engagement:false, contracts:false, ltm:false, capital:false, prospect:false, opus:false, pinned:false, pubcol:false, privcol:false },
+};
+
+const TEMPLATES = [
+  { id:1, name:'Strategic – Public Default',  tier:'strategic', sector:'Public',  status:'active',   isDefault:true,  applied:87, rolePerms:JSON.parse(JSON.stringify(DEF_PERMS)) },
+  { id:2, name:'Strategic – Private Default', tier:'strategic', sector:'Private', status:'active',   isDefault:false, applied:53, rolePerms:JSON.parse(JSON.stringify(DEF_PERMS)) },
+  { id:3, name:'Strategic – Both Sectors',    tier:'strategic', sector:'Both',    status:'active',   isDefault:false, applied:18, rolePerms:JSON.parse(JSON.stringify(DEF_PERMS)) },
+  { id:4, name:'Emerging – Public Standard',  tier:'emerging',  sector:'Public',  status:'active',   isDefault:false, applied:34, rolePerms:(()=>{ const p=JSON.parse(JSON.stringify(DEF_PERMS)); p.sup_admin.opus=false; p.sup_admin.ltm=false; p.sup_user.market=false; return p; })() },
+  { id:5, name:'Emerging – Private Default',  tier:'emerging',  sector:'Private', status:'active',   isDefault:true,  applied:29, rolePerms:JSON.parse(JSON.stringify(DEF_PERMS)) },
+  { id:6, name:'Self-Serve Standard',         tier:'self',      sector:'Both',    status:'active',   isDefault:false, applied:61, rolePerms:(()=>{ const p=JSON.parse(JSON.stringify(DEF_PERMS)); SUP_ROLES.forEach(r=>{ p[r.id].market=false; p[r.id].engagement=false; p[r.id].ltm=false; p[r.id].capital=false; p[r.id].opus=false; p[r.id].export=false; p[r.id].pin=false; p[r.id].pubcol=false; p[r.id].privcol=false; p[r.id].users=false; }); return p; })() },
+  { id:7, name:'Onboarding – Default',        tier:'onboarding',sector:'Both',    status:'active',   isDefault:true,  applied:12, rolePerms:JSON.parse(JSON.stringify(ONBOARDING_PERMS)) },
+  { id:8, name:'Self-Serve Lite',             tier:'self',      sector:'Public',  status:'inactive', isDefault:false, applied:0,  rolePerms:JSON.parse(JSON.stringify(DEF_PERMS)) },
+];
+
+const SECTOR_DEFAULTS = {
+  'strategic-Public':1,'strategic-Private':2,'strategic-Both':3,
+  'emerging-Public':4,'emerging-Private':5,'emerging-Both':null,
+  'self-Public':null,'self-Private':null,'self-Both':6,
+  'onboarding-Both':7,
+};
+
+const SUPPLIERS = [
+  { id:1,  name:'Acme Corp',           tier:'strategic', sector:'Public',  tmplId:1 },
+  { id:2,  name:'BlueStar Solutions',  tier:'strategic', sector:'Public',  tmplId:1 },
+  { id:3,  name:'Cascade Inc',         tier:'strategic', sector:'Private', tmplId:2 },
+  { id:4,  name:'Delta Systems',       tier:'strategic', sector:'Private', tmplId:2 },
+  { id:5,  name:'Echo Technologies',   tier:'strategic', sector:'Both',    tmplId:3 },
+  { id:6,  name:'Frontier Group',      tier:'emerging',  sector:'Public',  tmplId:4 },
+  { id:7,  name:'Global Nexus',        tier:'emerging',  sector:'Public',  tmplId:4 },
+  { id:8,  name:'Harbor Point',        tier:'emerging',  sector:'Private', tmplId:5 },
+  { id:9,  name:'Innovate LLC',        tier:'emerging',  sector:'Private', tmplId:5 },
+  { id:10, name:'Junction Partners',   tier:'emerging',  sector:'Both',    tmplId:5 },
+  { id:11, name:'Keystone Co.',        tier:'self',      sector:'Both',    tmplId:6 },
+  { id:12, name:'Lumen Corp',          tier:'self',      sector:'Both',    tmplId:6 },
+  { id:13, name:'Meridian Group',      tier:'self',      sector:'Public',  tmplId:6 },
+  { id:14, name:'Northern Trust Co.',  tier:'strategic', sector:'Public',  tmplId:1 },
+  { id:15, name:'Opex Solutions',      tier:'emerging',  sector:'Public',  tmplId:4 },
+  { id:16, name:'Pinnacle Industries', tier:'strategic', sector:'Both',    tmplId:3 },
+  { id:17, name:'Quantum Partners',    tier:'emerging',  sector:'Both',    tmplId:5 },
+  { id:18, name:'Redwood Logistics',   tier:'self',      sector:'Private', tmplId:6 },
+  { id:19, name:'Summit Corp',         tier:'strategic', sector:'Private', tmplId:2 },
+  { id:20, name:'Titan Manufacturing', tier:'emerging',  sector:'Public',  tmplId:4 },
+  { id:21, name:'Unity Systems',       tier:'self',      sector:'Public',  tmplId:6 },
+  { id:22, name:'Vantage Group',       tier:'strategic', sector:'Public',  tmplId:1 },
+  { id:23, name:'Westfield Inc.',      tier:'emerging',  sector:'Private', tmplId:5 },
+  { id:24, name:'Xenith Partners',     tier:'self',      sector:'Both',    tmplId:6 },
+  { id:25, name:'Zephyr Innovations',  tier:'strategic', sector:'Both',    tmplId:3 },
+];
+
+const UNASSIGNED_SUPPLIERS = [
+  { id:101, name:'Acme Industrial Corp',   since:'2026-05-15' },
+  { id:102, name:'BlueSky Solutions',      since:'2026-05-22' },
+  { id:103, name:'Cascade Industries',     since:'2026-06-01' },
+  { id:104, name:'Delta Systems LLC',      since:'2026-06-03' },
+  { id:105, name:'Echo Technologies',      since:'2026-06-05' },
+  { id:106, name:'Frontier Group',         since:'2026-06-08' },
+  { id:107, name:'Global Nexus Partners',  since:'2026-06-10' },
+  { id:108, name:'Harbor Point Logistics', since:'2026-06-12' },
+  { id:109, name:'Innovate LLC',           since:'2026-06-14' },
+  { id:110, name:'Junction Partners',      since:'2026-06-15' },
+  { id:111, name:'Keystone Co.',           since:'2026-06-17' },
+  { id:112, name:'Lumen Corp',             since:'2026-06-19' },
+];
+
+const AUDIT_LOG = [
+  { msg:'"Onboarding – Default" applied to 12 new suppliers', user:'System (auto)', time:'2026-06-19 08:00 AM' },
+  { msg:'"Strategic – Public Default" applied to 12 suppliers via bulk assignment', user:'Valentina Diamante', time:'2026-06-07 09:14 AM' },
+  { msg:'Supplier User "Export Search Results" disabled in "Emerging – Public Standard"', user:'Valentina Diamante', time:'2026-06-06 03:41 PM' },
+  { msg:'"Self-Serve Standard": Supplier Admin OPUS Access toggled off', user:'Marcus Webb', time:'2026-06-05 11:22 AM' },
+  { msg:'New template "Strategic – Both Sectors" created', user:'Valentina Diamante', time:'2026-06-04 08:57 AM' },
+  { msg:'"Emerging – Private Default" set as default for Emerging / Private', user:'Valentina Diamante', time:'2026-06-02 02:10 PM' },
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────
+let expandedId  = null;   // row currently expanded for edit
+let editTmpl    = null;   // working copy for row expansion
+let editRoleTab = 'sup_admin';
+let newTmpl     = null;   // working copy for create modal
+let newRoleTab  = 'sup_admin';
+let pickerTmplId = null;
+let pickerSel    = new Set();
+let unassignedSel = new Set();
+
+// ── HELPERS ───────────────────────────────────────────────────────────
+function tierChip(tier) {
+  if(tier==='strategic')  return `<span class="chip chip-strategic">Strategic</span>`;
+  if(tier==='emerging')   return `<span class="chip chip-emerging">Emerging</span>`;
+  if(tier==='onboarding') return `<span class="chip chip-onboarding">Onboarding ⚠</span>`;
+  return `<span class="chip chip-self">Self-Serve</span>`;
+}
+
+function tierOptions(sel) {
+  return ['strategic','emerging','self','onboarding'].map(v=>`<option value="${v}" ${sel===v?'selected':''}>${v==='strategic'?'Strategic':v==='emerging'?'Emerging':v==='self'?'Self-Serve':'Onboarding ⚠'}</option>`).join('');
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  ['templates','sector','assign','audit'].forEach(p=>{
+    document.getElementById('pane-'+p).style.display = p===tab?'':'none';
+  });
+  if(tab==='sector') renderSectorDefaults();
+  if(tab==='assign') populateBulkDropdowns();
+  if(tab==='audit')  renderAudit();
+}
+
+// ── TEMPLATES FILTER & TABLE ──────────────────────────────────────────
+function applyFilters() {
+  const search   = (document.getElementById('f-search')?.value||'').toLowerCase();
+  const tier     = document.getElementById('f-tier')?.value||'';
+  const sector   = document.getElementById('f-sector')?.value||'';
+  const status   = document.getElementById('f-status')?.value||'';
+  const assigned = document.getElementById('f-assigned')?.value||'';
+  const isDef    = document.getElementById('f-default')?.checked||false;
+  let list = TEMPLATES;
+  if(search)              list=list.filter(t=>t.name.toLowerCase().includes(search));
+  if(tier)                list=list.filter(t=>t.tier===tier);
+  if(sector)              list=list.filter(t=>t.sector===sector);
+  if(status)              list=list.filter(t=>t.status===status);
+  if(assigned==='assigned')   list=list.filter(t=>t.applied>0);
+  if(assigned==='unassigned') list=list.filter(t=>t.applied===0);
+  if(isDef)               list=list.filter(t=>t.isDefault);
+  renderTableFiltered(list);
+}
+
+function clearFilters() {
+  document.getElementById('f-search').value='';
+  ['f-tier','f-sector','f-status','f-assigned'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('f-default').checked=false;
+  applyFilters();
+}
+
+function renderTable() { applyFilters(); }
+
+function renderTableFiltered(list) {
+  const tbody = document.getElementById('tmpl-tbody');
+  const ct    = document.getElementById('tmpl-count-txt');
+  if(ct) ct.textContent = `${list.length} template${list.length!==1?'s':''} shown`;
+  tbody.innerHTML = '';
+
+  list.forEach(t => {
+    const isExp = expandedId===t.id;
+    const statusChip = t.status==='active'
+      ? `<span class="chip chip-active">Active</span>`
+      : `<span class="chip chip-inactive">Inactive</span>`;
+    const defTag = t.isDefault ? `<span class="chip chip-default">Default</span>` : '';
+    const toggleLabel = t.status==='active' ? 'Deactivate' : 'Activate';
+
+    const tr = document.createElement('tr');
+    if(isExp) tr.classList.add('row-expanded');
+    tr.innerHTML = `
+      <td><strong style="font-weight:500;">${t.name}</strong>${defTag}</td>
+      <td>${tierChip(t.tier)}</td>
+      <td>${t.sector}</td>
+      <td>${statusChip}</td>
+      <td style="color:#6e6e73;">${t.applied} suppliers</td>
+      <td>
+        <div class="tbl-actions">
+          <button class="btn-outline-sm" onclick="openSupplierPicker(${t.id},event)">Assign</button>
+          <button class="btn-outline-sm ${isExp?'active-row':''}" onclick="toggleExpand(${t.id},event)">${isExp?'Close Edit':'Edit'}</button>
+          <button class="btn-outline-sm ${t.status==='active'?'danger':''}" onclick="toggleStatus(${t.id},event)">${toggleLabel}</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+
+    if(isExp) {
+      const expTr = document.createElement('tr');
+      expTr.className = 'expand-row';
+      expTr.innerHTML = `<td colspan="6">${buildExpandHTML(t)}</td>`;
+      tbody.appendChild(expTr);
+    }
+  });
+
+  if(expandedId) renderExpPerms();
+}
+
+// ── INLINE EXPANSION ──────────────────────────────────────────────────
+function buildExpandHTML(t) {
+  return `
+  <div class="expand-content">
+    <div class="expand-meta">
+      <div>
+        <label class="form-label">Template Name</label>
+        <input type="text" class="mat-input" id="exp-name" value="${t.name}" placeholder="Template name">
+      </div>
+      <div>
+        <label class="form-label">Tier</label>
+        <select class="mat-input" id="exp-tier">${tierOptions(t.tier)}</select>
+      </div>
+      <div>
+        <label class="form-label">Sector</label>
+        <select class="mat-input" id="exp-sector">
+          <option ${t.sector==='Public'?'selected':''}>Public</option>
+          <option ${t.sector==='Private'?'selected':''}>Private</option>
+          <option ${t.sector==='Both'?'selected':''}>Both</option>
+        </select>
+      </div>
+      <div style="padding-top:18px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="exp-default" ${t.isDefault?'checked':''}> Default for Sector
+        </label>
+      </div>
+      <div>
+        <label class="form-label">Status</label>
+        <div class="toggle-pill">
+          <div class="toggle-pill-track ${t.status==='active'?'on':''}" id="exp-tog" onclick="doExpToggle()"></div>
+          <span class="toggle-pill-label" id="exp-tog-lbl">${t.status==='active'?'Active':'Inactive'}</span>
+        </div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div style="font-size:11px;font-weight:700;color:#6e6e73;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Permissions per User Role</div>
+    <div class="role-tab-row" id="exp-rtabs">
+      ${SUP_ROLES.map(r=>`<div class="role-tab ${r.id===editRoleTab?'active':''}" onclick="switchExpRoleTab('${r.id}',this)">${r.label}</div>`).join('')}
+    </div>
+    <div id="exp-perm-content"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid #eee;">
+      ${t.applied===0?`<button class="btn-text-danger" onclick="delTmpl(${t.id})">✕ Delete Template</button>`:'<div></div>'}
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="btn-cancel" onclick="collapseRow()">Cancel</button>
+        <button class="btn-save" onclick="saveExpanded()">Save</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleExpand(id, e) {
+  e&&e.stopPropagation&&e.stopPropagation();
+  if(expandedId===id) { expandedId=null; editTmpl=null; }
+  else {
+    expandedId = id;
+    editRoleTab = 'sup_admin';
+    editTmpl = JSON.parse(JSON.stringify(TEMPLATES.find(t=>t.id===id)));
+  }
+  renderTable();
+}
+
+function collapseRow() { expandedId=null; editTmpl=null; renderTable(); }
+
+function switchExpRoleTab(id, el) {
+  editRoleTab=id;
+  document.querySelectorAll('#exp-rtabs .role-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderExpPerms();
+}
+
+function renderExpPerms() {
+  const container = document.getElementById('exp-perm-content');
+  if(!container||!editTmpl) return;
+  container.innerHTML = buildPermsHTML(editTmpl, editRoleTab, 'exp');
+}
+
+function doExpToggle() {
+  const tog=document.getElementById('exp-tog');
+  const lbl=document.getElementById('exp-tog-lbl');
+  const on=tog.classList.toggle('on');
+  lbl.textContent=on?'Active':'Inactive';
+  editTmpl.status=on?'active':'inactive';
+}
+
+function saveExpanded() {
+  const t=editTmpl;
+  t.name   = document.getElementById('exp-name').value||'Untitled';
+  t.tier   = document.getElementById('exp-tier').value;
+  t.sector = document.getElementById('exp-sector').value;
+  t.isDefault = document.getElementById('exp-default').checked;
+  const idx=TEMPLATES.findIndex(x=>x.id===t.id);
+  TEMPLATES[idx]=t;
+  AUDIT_LOG.unshift({ msg:`Template "${t.name}" updated`, user:'Valentina Diamante', time:new Date().toLocaleString() });
+  expandedId=null; editTmpl=null;
+  renderTable();
+}
+
+function toggleExpFeat(roleId, featId) {
+  editTmpl.rolePerms[roleId][featId] = !editTmpl.rolePerms[roleId][featId];
+  renderExpPerms();
+}
+function toggleExpGroup(grp, checked) {
+  FEATURES.filter(f=>f.grp===grp).forEach(f=>{ editTmpl.rolePerms[editRoleTab][f.id]=checked; });
+  renderExpPerms();
+}
+
+// ── CREATE MODAL ──────────────────────────────────────────────────────
+function openCreateModal() {
+  newTmpl = { id:null, name:'', tier:'strategic', sector:'Public', status:'active', isDefault:false, applied:0, rolePerms:JSON.parse(JSON.stringify(DEF_PERMS)) };
+  newRoleTab = 'sup_admin';
+  document.getElementById('modal-title').textContent = 'New Template';
+  document.getElementById('modal-body').innerHTML = buildCreateFormHTML();
+  document.getElementById('modal-footer').innerHTML = `
+    <div></div>
+    <div style="display:flex;align-items:center;">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveNewTemplate()">Create Template</button>
+    </div>`;
+  openModal();
+  renderNewPerms();
+}
+
+function buildCreateFormHTML() {
+  const t=newTmpl;
+  return `
+  <div class="expand-meta" style="margin-bottom:20px;">
+    <div>
+      <label class="form-label">Template Name</label>
+      <input type="text" class="mat-input" id="new-name" value="${t.name}" placeholder="Template name">
+    </div>
+    <div>
+      <label class="form-label">Tier</label>
+      <select class="mat-input" id="new-tier">${tierOptions(t.tier)}</select>
+    </div>
+    <div>
+      <label class="form-label">Sector</label>
+      <select class="mat-input" id="new-sector">
+        <option ${t.sector==='Public'?'selected':''}>Public</option>
+        <option ${t.sector==='Private'?'selected':''}>Private</option>
+        <option ${t.sector==='Both'?'selected':''}>Both</option>
+      </select>
+    </div>
+    <div style="padding-top:18px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="new-default"> Default for Sector
+      </label>
+    </div>
+    <div>
+      <label class="form-label">Status</label>
+      <div class="toggle-pill">
+        <div class="toggle-pill-track on" id="new-tog" onclick="doNewToggle()"></div>
+        <span class="toggle-pill-label" id="new-tog-lbl">Active</span>
+      </div>
+    </div>
+  </div>
+  <hr class="divider">
+  <div style="font-size:11px;font-weight:700;color:#6e6e73;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Permissions per User Role</div>
+  <div class="role-tab-row" id="new-rtabs">
+    ${SUP_ROLES.map(r=>`<div class="role-tab ${r.id===newRoleTab?'active':''}" onclick="switchNewRoleTab('${r.id}',this)">${r.label}</div>`).join('')}
+  </div>
+  <div id="new-perm-content"></div>`;
+}
+
+function switchNewRoleTab(id, el) {
+  newRoleTab=id;
+  document.querySelectorAll('#new-rtabs .role-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderNewPerms();
+}
+
+function renderNewPerms() {
+  const container=document.getElementById('new-perm-content');
+  if(!container||!newTmpl) return;
+  container.innerHTML=buildPermsHTML(newTmpl, newRoleTab, 'new');
+}
+
+function doNewToggle() {
+  const tog=document.getElementById('new-tog');
+  const lbl=document.getElementById('new-tog-lbl');
+  const on=tog.classList.toggle('on');
+  lbl.textContent=on?'Active':'Inactive';
+  newTmpl.status=on?'active':'inactive';
+}
+
+function saveNewTemplate() {
+  const t=newTmpl;
+  t.name   = document.getElementById('new-name').value||'Untitled';
+  t.tier   = document.getElementById('new-tier').value;
+  t.sector = document.getElementById('new-sector').value;
+  t.isDefault = document.getElementById('new-default').checked;
+  t.id = Math.max(...TEMPLATES.map(x=>x.id))+1;
+  TEMPLATES.push(t);
+  AUDIT_LOG.unshift({ msg:`Template "${t.name}" created`, user:'Valentina Diamante', time:new Date().toLocaleString() });
+  closeModal();
+  renderTable();
+}
+
+function toggleNewFeat(roleId, featId) {
+  newTmpl.rolePerms[roleId][featId] = !newTmpl.rolePerms[roleId][featId];
+  renderNewPerms();
+}
+function toggleNewGroup(grp, checked) {
+  FEATURES.filter(f=>f.grp===grp).forEach(f=>{ newTmpl.rolePerms[newRoleTab][f.id]=checked; });
+  renderNewPerms();
+}
+
+// ── SHARED PERMISSIONS RENDERER ───────────────────────────────────────
+function buildPermsHTML(tmpl, activeRoleId, prefix) {
+  const rolePerms = tmpl.rolePerms[activeRoleId];
+  const groups = {};
+  FEATURES.forEach(f=>{ if(!groups[f.grp]) groups[f.grp]=[]; groups[f.grp].push(f); });
+  const enabledCount = Object.values(rolePerms).filter(Boolean).length;
+  const toggleFn = prefix==='exp' ? 'toggleExpFeat' : 'toggleNewFeat';
+  const groupFn  = prefix==='exp' ? 'toggleExpGroup' : 'toggleNewGroup';
+
+  let html = `<div style="background:#f0f2f8;border:1px solid #dde2eb;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;">
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#222742;">${SUP_ROLES.find(r=>r.id===activeRoleId)?.label}</div>
+      <div style="font-size:11.5px;color:#9e9e9e;margin-top:1px;">${SUP_ROLES.find(r=>r.id===activeRoleId)?.desc}</div>
+    </div>
+    <div style="margin-left:auto;text-align:right;">
+      <span style="font-size:18px;font-weight:600;color:#007cbd;">${enabledCount}</span>
+      <span style="font-size:11px;color:#9e9e9e;"> / ${FEATURES.length} features enabled</span>
+    </div>
+  </div>
+  <div class="chk-panels-2col">`;
+
+  const grpEntries = Object.entries(groups);
+  grpEntries.forEach(([grp, feats]) => {
+    const grpEnabled = feats.filter(f=>rolePerms[f.id]).length;
+    const grpChecked = grpEnabled===feats.length;
+    const grpPartial = grpEnabled>0 && grpEnabled<feats.length;
+    html += `<div style="margin-bottom:14px;"><div class="chk-panel">
+      <div class="chk-panel-header">
+        <input type="checkbox" ${grpChecked?'checked':''} ${grpPartial?'style="accent-color:#007cbd;opacity:.6;"':''} onchange="${groupFn}('${grp}',this.checked)" style="accent-color:#007cbd;width:15px;height:15px;">
+        <span class="hdr-label">${grp}</span>
+        <span class="hdr-count">${grpEnabled} <span class="hdr-help" title="Features enabled">?</span></span>
+      </div>
+      <div class="chk-panel-body">`;
+    feats.forEach(f=>{
+      html += `<div class="chk-item" onclick="${toggleFn}('${activeRoleId}','${f.id}')">
+        <input type="checkbox" ${rolePerms[f.id]?'checked':''} style="accent-color:#007cbd;width:15px;height:15px;">
+        <label>${f.label}</label>
+      </div>`;
+    });
+    html += `</div></div></div>`;
+  });
+
+  html += `</div>`;
+  return html;
+}
+
+// ── TEMPLATE STATUS & DELETE ──────────────────────────────────────────
+function toggleStatus(id, e) {
+  e&&e.stopPropagation&&e.stopPropagation();
+  const t=TEMPLATES.find(x=>x.id===id);
+  t.status = t.status==='active'?'inactive':'active';
+  AUDIT_LOG.unshift({ msg:`"${t.name}" ${t.status==='active'?'activated':'deactivated'}`, user:'Valentina Diamante', time:new Date().toLocaleString() });
+  if(expandedId===id) editTmpl.status=t.status;
+  renderTable();
+}
+
+function delTmpl(id) {
+  const t=TEMPLATES.find(x=>x.id===id);
+  if(t.applied>0){ alert(`Cannot delete — applied to ${t.applied} supplier(s).`); return; }
+  if(confirm(`Delete "${t.name}"? This cannot be undone.`)){
+    TEMPLATES.splice(TEMPLATES.indexOf(t),1);
+    expandedId=null; editTmpl=null;
+    renderTable();
+  }
+}
+
+// ── SUPPLIER PICKER MODAL ─────────────────────────────────────────────
+function openSupplierPicker(tmplId, e) {
+  e&&e.stopPropagation&&e.stopPropagation();
+  pickerTmplId=tmplId; pickerSel=new Set();
+  const tmpl=TEMPLATES.find(t=>t.id===tmplId);
+  document.getElementById('modal-title').textContent=`Assign "${tmpl.name}" to Suppliers`;
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="form-group"><label class="form-label">Filter by Tier</label><select class="mat-input" id="picker-tier" onchange="renderPickerSuppliers()"><option value="">All Tiers</option><option value="strategic">Strategic</option><option value="emerging">Emerging</option><option value="self">Self-Serve</option><option value="onboarding">Onboarding</option></select></div>
+      <div class="form-group"><label class="form-label">Filter by Sector</label><select class="mat-input" id="picker-sector" onchange="renderPickerSuppliers()"><option value="">All Sectors</option><option value="Public">Public</option><option value="Private">Private</option><option value="Both">Both</option></select></div>
+    </div>
+    <div id="picker-count-txt" style="font-size:12px;color:#6e6e73;margin-bottom:10px;"></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:36px;"><input type="checkbox" id="picker-chk-all" onchange="toggleAllPicker(this)" style="accent-color:#fff;"></th>
+        <th>Supplier Name</th><th>Tier</th><th>Sector</th><th>Current Template</th>
+      </tr></thead>
+      <tbody id="picker-tbody"></tbody>
+    </table></div>`;
+  document.getElementById('modal-footer').innerHTML=`
+    <span id="picker-sel-txt" style="font-size:12.5px;color:#555;">0 suppliers selected</span>
+    <div><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" id="picker-confirm" onclick="confirmAssignment()" disabled>Assign</button></div>`;
+  renderPickerSuppliers();
+  openModal();
+}
+
+function renderPickerSuppliers() {
+  const tier=document.getElementById('picker-tier')?.value||'';
+  const sector=document.getElementById('picker-sector')?.value||'';
+  let list=SUPPLIERS;
+  if(tier)   list=list.filter(s=>s.tier===tier);
+  if(sector) list=list.filter(s=>s.sector===sector);
+  const ct=document.getElementById('picker-count-txt');
+  if(ct) ct.textContent=`${list.length} supplier${list.length!==1?'s':''} match the filter`;
+  const tbody=document.getElementById('picker-tbody');
+  if(!tbody) return;
+  tbody.innerHTML=list.map(s=>{
+    const cur=TEMPLATES.find(t=>t.id===s.tmplId);
+    return `<tr>
+      <td><input type="checkbox" ${pickerSel.has(s.id)?'checked':''} onchange="togglePickerRow(${s.id},this)"></td>
+      <td style="font-weight:500;">${s.name}</td>
+      <td>${tierChip(s.tier)}</td>
+      <td>${s.sector}</td>
+      <td style="color:#6e6e73;font-size:12px;">${cur?cur.name:'—'}</td>
+    </tr>`;
+  }).join('');
+  updatePickerCount();
+}
+
+function togglePickerRow(id,c){ c.checked?pickerSel.add(id):pickerSel.delete(id); updatePickerCount(); }
+function toggleAllPicker(c){
+  const tier=document.getElementById('picker-tier')?.value||'';
+  const sector=document.getElementById('picker-sector')?.value||'';
+  let list=SUPPLIERS;
+  if(tier) list=list.filter(s=>s.tier===tier);
+  if(sector) list=list.filter(s=>s.sector===sector);
+  list.forEach(s=>c.checked?pickerSel.add(s.id):pickerSel.delete(s.id));
+  renderPickerSuppliers();
+}
+function updatePickerCount(){
+  const n=pickerSel.size;
+  const el=document.getElementById('picker-sel-txt'); if(el) el.textContent=`${n} supplier${n!==1?'s':''} selected`;
+  const btn=document.getElementById('picker-confirm'); if(btn) btn.disabled=n===0;
+}
+function confirmAssignment(){
+  const tmpl=TEMPLATES.find(t=>t.id===pickerTmplId);
+  const n=pickerSel.size;
+  pickerSel.forEach(id=>{ const s=SUPPLIERS.find(x=>x.id===id); if(s) s.tmplId=pickerTmplId; });
+  AUDIT_LOG.unshift({ msg:`"${tmpl.name}" assigned to ${n} supplier${n!==1?'s':''} via picker`, user:'Valentina Diamante', time:new Date().toLocaleString() });
+  closeModal(); renderTable();
+}
+
+// ── DEFAULT SECTION ASSIGNMENT ────────────────────────────────────────
+const TIER_GROUPS = [
+  { id:'strategic',  label:'Strategic',  sectors:['Public','Private','Both'] },
+  { id:'emerging',   label:'Emerging',   sectors:['Public','Private','Both'] },
+  { id:'self',       label:'Self-Serve', sectors:['Public','Private','Both'] },
+  { id:'onboarding', label:'Onboarding', sectors:['Both'] },
+];
+
+function renderSectorDefaults() {
+  const tbody=document.getElementById('sector-defaults-tbody');
+  let html='';
+  TIER_GROUPS.forEach(grp=>{
+    html+=`<tr class="sector-grp-row"><td colspan="3">${tierChip(grp.id)}&nbsp;${grp.label}</td></tr>`;
+    grp.sectors.forEach(sector=>{
+      const key=`${grp.id}-${sector}`;
+      const tmplId=SECTOR_DEFAULTS[key];
+      const tmpl=tmplId?TEMPLATES.find(t=>t.id===tmplId):null;
+      html+=`<tr style="border-bottom:0.8px solid #dde2eb;">
+        <td style="padding:10px 14px 10px 28px;color:#555;">${sector}</td>
+        <td style="padding:10px 14px;">${tmpl
+          ?`<strong style="font-weight:500;">${tmpl.name}</strong> <span class="chip chip-default">Default</span>`
+          :`<span class="sector-none">No default — click to assign</span>`}</td>
+        <td style="padding:10px 14px;text-align:center;"><button class="btn-outline-sm" onclick="openDefaultPicker('${grp.id}','${sector}')">${tmpl?'Change':'Assign'}</button></td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML=html;
+}
+
+function openDefaultPicker(tier, sector) {
+  const eligible=TEMPLATES.filter(t=>t.status==='active'&&t.tier===tier&&(t.sector===sector||t.sector==='Both'||sector==='Both'));
+  const currentId=SECTOR_DEFAULTS[`${tier}-${sector}`];
+  document.getElementById('modal-title').textContent=`Set Default: ${tier.charAt(0).toUpperCase()+tier.slice(1)} / ${sector}`;
+  document.getElementById('modal-body').innerHTML = eligible.length===0
+    ? `<p style="color:#9e9e9e;font-size:13px;padding:8px 0;">No active templates match <strong>${tier} / ${sector}</strong>. Create one first.</p>`
+    : eligible.map(t=>`
+      <div class="chk-item" onclick="setDefaultTemplate('${tier}','${sector}',${t.id})" style="border:1px solid #dde2eb;border-radius:2px;margin-bottom:8px;padding:12px 14px;cursor:pointer;">
+        <div style="flex:1;">
+          <div style="font-weight:500;">${t.name}</div>
+          <div style="font-size:11.5px;color:#9e9e9e;margin-top:2px;">${t.sector} · ${t.applied} suppliers</div>
+        </div>
+        ${tierChip(t.tier)}
+        ${t.id===currentId?`<span class="chip chip-default" style="margin-left:8px;">Current default</span>`:''}
+      </div>`).join('');
+  document.getElementById('modal-footer').innerHTML=`<div></div><button class="btn-cancel" onclick="closeModal()">Cancel</button>`;
+  openModal();
+}
+
+function setDefaultTemplate(tier, sector, tmplId) {
+  SECTOR_DEFAULTS[`${tier}-${sector}`]=tmplId;
+  const tmpl=TEMPLATES.find(t=>t.id===tmplId);
+  AUDIT_LOG.unshift({ msg:`"${tmpl.name}" set as default for ${tier} / ${sector}`, user:'Valentina Diamante', time:new Date().toLocaleString() });
+  closeModal(); renderSectorDefaults();
+}
+
+// ── SUPPLIER ASSIGNMENT ───────────────────────────────────────────────
+function setAssignView(view, btn) {
+  document.querySelectorAll('.assign-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('av-bulk').style.display       = view==='bulk'?'':'none';
+  document.getElementById('av-unassigned').style.display = view==='unassigned'?'':'none';
+  if(view==='unassigned') renderUnassigned();
+}
+
+function populateBulkDropdowns() {
+  const active=TEMPLATES.filter(t=>t.status==='active');
+  const opts=active.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  ['bulk-tmpl','unassigned-bulk-tmpl'].forEach(id=>{ const e=document.getElementById(id); if(e) e.innerHTML=(id==='bulk-tmpl'?'<option value="">Choose template…</option>':'<option value="">Select template…</option>')+opts; });
+}
+
+function updateBulkCount() {
+  const tier=document.getElementById('bulk-tier')?.value||'all';
+  const sector=document.getElementById('bulk-sector')?.value||'all';
+  const counts={'all-all':247,'strategic-all':87,'emerging-all':63,'self-all':61,'onboarding-all':12,'all-Public':120,'all-Private':98,'all-Both':29,'strategic-Public':52,'strategic-Private':30,'strategic-Both':18,'emerging-Public':34,'emerging-Private':29,'emerging-Both':0,'self-Public':21,'self-Private':18,'self-Both':22};
+  const n=counts[`${tier}-${sector}`]??Math.floor(Math.random()*40)+10;
+  const el=document.getElementById('bulk-match-txt');
+  if(el) el.innerHTML=`<strong style="color:#222742;">${n} suppliers</strong> match the filter. Applying will update permissions on next login.`;
+}
+
+function openBulkConfirm() {
+  const tmplId=document.getElementById('bulk-tmpl')?.value;
+  if(!tmplId){ alert('Please select a template first.'); return; }
+  const tmpl=TEMPLATES.find(t=>t.id===parseInt(tmplId));
+  const tier=document.getElementById('bulk-tier')?.value||'all';
+  const sector=document.getElementById('bulk-sector')?.value||'all';
+  const counts={'all-all':247,'strategic-all':87,'emerging-all':63,'self-all':61,'onboarding-all':12,'all-Public':120,'all-Private':98,'all-Both':29,'strategic-Public':52,'strategic-Private':30,'strategic-Both':18,'emerging-Public':34,'emerging-Private':29,'self-Public':21,'self-Private':18,'self-Both':22};
+  const n=counts[`${tier}-${sector}`]??247;
+  const tierLbl=tier==='all'?'All Tiers':tier.charAt(0).toUpperCase()+tier.slice(1);
+  const sectorLbl=sector==='all'?'All Sectors':sector;
+  document.getElementById('modal-title').textContent='Confirm Bulk Assignment';
+  document.getElementById('modal-body').innerHTML=`
+    <p style="font-size:13px;line-height:1.7;margin-bottom:16px;">You are about to assign <strong>${tmpl.name}</strong> to <strong>${n} suppliers</strong> (${tierLbl} · ${sectorLbl}).</p>
+    <div class="notice notice-warn">⚠️ This will <strong>replace</strong> any existing template assignments. Changes take effect on each supplier's next login.</div>`;
+  document.getElementById('modal-footer').innerHTML=`
+    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+    <button class="btn-save" onclick="executeBulkApply(${tmpl.id},${n})">Confirm — Assign to ${n} Suppliers</button>`;
+  openModal();
+}
+
+function executeBulkApply(tmplId, count) {
+  const tmpl=TEMPLATES.find(t=>t.id===tmplId);
+  tmpl.applied+=count;
+  AUDIT_LOG.unshift({ msg:`"${tmpl.name}" bulk-assigned to ${count} suppliers`, user:'Valentina Diamante', time:new Date().toLocaleString() });
+  closeModal(); renderTable();
+}
+
+// ── EXPORTS ───────────────────────────────────────────────────────────
+function exportFilteredSuppliers() {
+  const tier=document.getElementById('bulk-tier')?.value||'all';
+  const sector=document.getElementById('bulk-sector')?.value||'all';
+  let list=SUPPLIERS;
+  if(tier!=='all') list=list.filter(s=>s.tier===tier);
+  if(sector!=='all') list=list.filter(s=>s.sector===sector);
+  const headers=['Supplier Name','Tier','Sector','Assigned Template'];
+  const rows=list.map(s=>{ const t=TEMPLATES.find(x=>x.id===s.tmplId); return[s.name,s.tier,s.sector,t?t.name:'']; });
+  downloadCSV([headers,...rows],'supplier-assignment-filtered.csv');
+}
+
+function exportFullAssignment() {
+  const headers=['Supplier Name','Tier','Sector','Assigned Template','Template Status'];
+  const assigned=SUPPLIERS.map(s=>{ const t=TEMPLATES.find(x=>x.id===s.tmplId); return[s.name,s.tier,s.sector,t?t.name:'',t?t.status:'']; });
+  const unassigned=UNASSIGNED_SUPPLIERS.map(s=>[s.name,'—','—','UNASSIGNED','']);
+  downloadCSV([headers,...assigned,...unassigned],'supplier-template-full-assignment.csv');
+}
+
+function downloadCSV(rows, filename) {
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ── UNASSIGNED ────────────────────────────────────────────────────────
+function renderUnassigned() {
+  const active=TEMPLATES.filter(t=>t.status==='active');
+  const opts=active.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  document.getElementById('unassigned-tbody').innerHTML=UNASSIGNED_SUPPLIERS.map(s=>`
+    <tr>
+      <td><input type="checkbox" ${unassignedSel.has(s.id)?'checked':''} onchange="toggleUnassigned(${s.id},this)"></td>
+      <td style="font-weight:500;">${s.name}</td>
+      <td style="color:#6e6e73;">${s.since}</td>
+      <td><select class="mat-input" id="usel-${s.id}" style="font-size:12px;width:230px;"><option value="">Select template…</option>${opts}</select></td>
+      <td><button class="btn-outline-sm" onclick="assignSingleUnassigned(${s.id})">Assign</button></td>
+    </tr>`).join('');
+  populateBulkDropdowns();
+}
+
+function toggleUnassigned(id,c){
+  c.checked?unassignedSel.add(id):unassignedSel.delete(id);
+  const n=unassignedSel.size;
+  const bar=document.getElementById('unassigned-bulk-bar');
+  if(bar) bar.style.display=n>0?'':'none';
+  const ct=document.getElementById('unassigned-bulk-ct'); if(ct) ct.textContent=`${n} selected`;
+}
+function toggleAllUnassigned(c){
+  UNASSIGNED_SUPPLIERS.forEach(s=>c.checked?unassignedSel.add(s.id):unassignedSel.delete(s.id));
+  renderUnassigned();
+  const bar=document.getElementById('unassigned-bulk-bar');
+  if(bar) bar.style.display=c.checked&&UNASSIGNED_SUPPLIERS.length>0?'':'none';
+  const ct=document.getElementById('unassigned-bulk-ct'); if(ct) ct.textContent=`${c.checked?UNASSIGNED_SUPPLIERS.length:0} selected`;
+}
+function assignSingleUnassigned(id){
+  const sel=document.getElementById(`usel-${id}`);
+  if(!sel||!sel.value){ alert('Select a template first.'); return; }
+  const tmpl=TEMPLATES.find(t=>t.id===parseInt(sel.value));
+  const sup=UNASSIGNED_SUPPLIERS.find(s=>s.id===id);
+  UNASSIGNED_SUPPLIERS.splice(UNASSIGNED_SUPPLIERS.indexOf(sup),1);
+  if(tmpl) tmpl.applied++;
+  AUDIT_LOG.unshift({ msg:`"${tmpl?.name}" assigned to ${sup.name}`, user:'Valentina Diamante', time:new Date().toLocaleString() });
+  unassignedSel.delete(id);
+  updateUnassignedBadge(); renderUnassigned(); renderTable();
+}
+function bulkAssignUnassigned(){
+  const sel=document.getElementById('unassigned-bulk-tmpl');
+  if(!sel||!sel.value){ alert('Select a template first.'); return; }
+  if(!unassignedSel.size){ alert('No suppliers selected.'); return; }
+  const tmpl=TEMPLATES.find(t=>t.id===parseInt(sel.value));
+  const count=unassignedSel.size;
+  unassignedSel.forEach(id=>{ const idx=UNASSIGNED_SUPPLIERS.findIndex(s=>s.id===id); if(idx>-1){ UNASSIGNED_SUPPLIERS.splice(idx,1); if(tmpl) tmpl.applied++; } });
+  AUDIT_LOG.unshift({ msg:`"${tmpl?.name}" bulk-assigned to ${count} unassigned supplier(s)`, user:'Valentina Diamante', time:new Date().toLocaleString() });
+  unassignedSel.clear();
+  updateUnassignedBadge(); renderUnassigned(); renderTable();
+}
+function updateUnassignedBadge(){
+  const n=UNASSIGNED_SUPPLIERS.length;
+  const b=document.getElementById('unassigned-badge'); if(b) b.textContent=n;
+  const w=document.getElementById('unassigned-warn-ct'); if(w) w.textContent=`${n} supplier${n!==1?'s':''}`;
+  document.getElementById('at-unassigned').innerHTML=`No Template Assigned &nbsp;<span class="chip chip-inactive" style="font-size:10px;padding:1px 6px;" id="unassigned-badge">${n}</span>`;
+}
+
+// ── AUDIT ─────────────────────────────────────────────────────────────
+function renderAudit(){
+  document.getElementById('audit-list').innerHTML=AUDIT_LOG.map(a=>`
+    <div class="audit-row"><div class="audit-dot"></div>
+    <div><div>${a.msg}</div><div class="audit-meta">${a.user} · ${a.time}</div></div></div>`).join('');
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────
+function openModal(){ document.getElementById('modal-overlay').classList.add('open'); document.getElementById('modal').classList.add('open'); }
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); document.getElementById('modal').classList.remove('open'); }
+
+// INIT
+renderTable();
+</script>
+</body>
+</html>
